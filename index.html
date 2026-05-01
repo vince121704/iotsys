@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Smart Agriculture MQTT Custom Subscriber - Real-time sensor monitoring dashboard for IoT agriculture nodes">
+  <title>AgriWatch — Smart Agriculture Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- MQTT.js via CDN for WebSocket MQTT in browser -->
+  <script src="https://unpkg.com/mqtt@5.5.0/dist/mqtt.min.js"></script>
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ======== HEADER ======== -->
+  <header id="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">🌿</span>
+        <h1>AgriWatch</h1>
+      </div>
+      <span class="tagline">Smart Agriculture Monitoring System</span>
+    </div>
+    <div class="header-right">
+      <div id="connection-status" class="status-badge disconnected">
+        <span class="status-dot"></span>
+        <span class="status-text">Disconnected</span>
+      </div>
+      <div id="clock" class="clock"></div>
+    </div>
+  </header>
+
+  <!-- ======== MAIN CONTENT ======== -->
+  <main id="dashboard">
+
+    <!-- ---- NODE INFO BAR ---- -->
+    <section id="node-info-bar" class="glass-panel">
+      <div class="info-item">
+        <span class="info-label">Node ID</span>
+        <span id="node-id" class="info-value">NODE_01</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-label">Location</span>
+        <span id="node-location" class="info-value">North_Field</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-label">Current Mode</span>
+        <span id="node-mode" class="info-value mode-unknown">—</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-label">Last Update</span>
+        <span id="last-update" class="info-value">—</span>
+      </div>
+    </section>
+
+    <!-- ---- SENSOR CARDS ---- -->
+    <section id="sensor-cards">
+
+      <!-- Temperature Card -->
+      <div class="sensor-card glass-panel" id="card-temperature">
+        <div class="card-header">
+          <div class="card-icon temp-icon">🌡️</div>
+          <div class="card-title">
+            <h2>Temperature</h2>
+            <span class="card-feed">node1-temperature</span>
+          </div>
+        </div>
+        <div class="card-value-wrap">
+          <span id="val-temperature" class="card-value">—</span>
+          <span class="card-unit">°C</span>
+        </div>
+        <div class="card-chart-wrap">
+          <canvas id="chart-temperature"></canvas>
+        </div>
+        <div class="card-footer">
+          <span class="card-min" id="min-temperature">Min: —</span>
+          <span class="card-max" id="max-temperature">Max: —</span>
+        </div>
+      </div>
+
+      <!-- Humidity Card -->
+      <div class="sensor-card glass-panel" id="card-humidity">
+        <div class="card-header">
+          <div class="card-icon hum-icon">💧</div>
+          <div class="card-title">
+            <h2>Humidity</h2>
+            <span class="card-feed">node1-humidity</span>
+          </div>
+        </div>
+        <div class="card-value-wrap">
+          <span id="val-humidity" class="card-value">—</span>
+          <span class="card-unit">%</span>
+        </div>
+        <div class="card-chart-wrap">
+          <canvas id="chart-humidity"></canvas>
+        </div>
+        <div class="card-footer">
+          <span class="card-min" id="min-humidity">Min: —</span>
+          <span class="card-max" id="max-humidity">Max: —</span>
+        </div>
+      </div>
+
+      <!-- Brightness Card -->
+      <div class="sensor-card glass-panel" id="card-brightness">
+        <div class="card-header">
+          <div class="card-icon bri-icon">☀️</div>
+          <div class="card-title">
+            <h2>Brightness</h2>
+            <span class="card-feed">node1-brightness</span>
+          </div>
+        </div>
+        <div class="card-value-wrap">
+          <span id="val-brightness" class="card-value">—</span>
+          <span class="card-unit">lux</span>
+        </div>
+        <div class="card-chart-wrap">
+          <canvas id="chart-brightness"></canvas>
+        </div>
+        <div class="card-footer">
+          <span class="card-min" id="min-brightness">Min: —</span>
+          <span class="card-max" id="max-brightness">Max: —</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ---- ALERT PANEL ---- -->
+    <section id="alert-panel" class="glass-panel">
+      <div class="alert-header">
+        <h2>⚠️ Temperature Alert Status</h2>
+        <span id="alert-feed-name" class="card-feed">node1-temp-warning</span>
+      </div>
+      <div id="alert-body" class="alert-body alert-none">
+        <div class="alert-indicator" id="alert-indicator">
+          <span class="alert-icon" id="alert-icon">✅</span>
+          <span class="alert-message" id="alert-message">No alerts — Waiting for data...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- MQTT LOG ---- -->
+    <section id="mqtt-log-panel" class="glass-panel">
+      <div class="log-header">
+        <h2>📡 MQTT Message Log</h2>
+        <button id="btn-clear-log" class="btn-clear" title="Clear log">Clear</button>
+      </div>
+      <div id="mqtt-log" class="mqtt-log">
+        <div class="log-entry log-info">Waiting for connection...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======== FOOTER ======== -->
+  <footer id="app-footer">
+    <p>AgriWatch Custom Subscriber &bull; MQTT over WebSocket &bull; Adafruit IO &bull; &copy; 2026</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
