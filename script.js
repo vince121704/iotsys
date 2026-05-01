@@ -5,7 +5,7 @@
 
 // -------- ADAFRUIT IO MQTT CONFIG --------
 const AIO_USERNAME = "vince17";
-const AIO_KEY      = "aio_nuHW29lc1lW8TgklAVXMCi4ZODUc";
+const AIO_KEY      = "aio_KgrK12sOOw0mlBbbCsBihsKveAj8";
 const AIO_WS_URL   = "wss://io.adafruit.com/mqtt/";
 
 // Feed keys (must match what the Arduino publisher uses)
